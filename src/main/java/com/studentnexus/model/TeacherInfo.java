@@ -1,6 +1,5 @@
 package com.studentnexus.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -15,7 +14,6 @@ public class TeacherInfo {
     private String name;
     private String emailId;
 
-    @JsonIgnore
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
