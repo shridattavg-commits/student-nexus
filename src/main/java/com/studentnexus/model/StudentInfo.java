@@ -1,6 +1,5 @@
 package com.studentnexus.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -15,7 +14,6 @@ public class StudentInfo {
     @NotBlank(message = "USN cannot be empty")
     private String usn;
 
-    @JsonIgnore                         // never serialized in GET responses
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)  // still accepted on POST
     @NotBlank(message = "Password cannot be empty")
     private String password;
