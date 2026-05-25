@@ -816,8 +816,8 @@
       try {
         // Fetch student info
         const [sRes, aRes] = await Promise.all([
-          fetch(`${API}/api/student/dashboard/${usn}`),
-          fetch(`${API}/api/attendance/${usn}`)
+          fetch(`${API}/api/student/dashboard/${usn}`, { headers: authHeaders() }),
+          fetch(`${API}/api/attendance/${usn}`, { headers: authHeaders() })
         ]);
 
         if (!sRes.ok) throw new Error('Student not found');
