@@ -29,7 +29,7 @@ public class JwtUtil {
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key())
+                .signWith(key(), io.jsonwebtoken.SignatureAlgorithm.HS256)
                 .compact();
     }
 

@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/student").permitAll()          // POST create student
                 .requestMatchers("/api/teacher/login").permitAll()
                 .requestMatchers("/api/teacher/register").permitAll()
-
+                    .requestMatchers(HttpMethod.POST, "/api/student/*/upload").authenticated()
                 // ── Public: static files ──
                 .requestMatchers("/uploads/**", "/*.html", "/", "/index.html",
                                  "/login.html", "/dashboard.html", "/crud.html").permitAll()
