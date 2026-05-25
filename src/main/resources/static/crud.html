@@ -571,7 +571,7 @@
                 </div>
                 <div>
                     <label class="field-label">Password *</label>
-                    <input type="password" id="password" placeholder="Choose a password">
+                    <input type="password" id="password" placeholder="Choose a password" autocomplete="new-password">
                 </div>
                 <div>
                     <label class="field-label">Email Address *</label>
@@ -682,7 +682,7 @@
     async function create() {
         const usn      = document.getElementById('usn').value.toUpperCase().trim();
         const name     = document.getElementById('name').value.trim();
-        const password = document.getElementById('password').value;
+        const password = document.getElementById('regPassword').value;
         const emailId  = document.getElementById('emailId').value.trim();
         const phone    = document.getElementById('phone').value.trim();
 
