@@ -1,0 +1,23 @@
+spring:
+  data:
+    mongodb:
+      # Uses MONGODB_URL env var on Railway, falls back to local for development
+      uri: ${MONGODB_URL:mongodb://localhost:27017/student_nexus_db}
+  security:
+    user:
+      name: ignored
+
+server:
+  address: 0.0.0.0
+  # Railway injects PORT env var; falls back to 8080 locally
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:YourSuperSecretKeyForJWTThatIsAtLeast256BitsLong!!}
+    expiration-ms: 86400000   # 24 hours
+  teacher:
+    invite-code: ${TEACHER_INVITE_CODE:NEXUS-TEACHER-2025}
+  cloudinary:
+    # Set CLOUDINARY_URL in Railway env vars → format: cloudinary://api_key:api_secret@cloud_name
+    url: ${CLOUDINARY_URL:cloudinary://placeholder:placeholder@placeholder}

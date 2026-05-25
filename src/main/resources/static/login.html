@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Portal — Student Nexus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #181c27;
+      --border:    #252a3a;
+      --accent:    #4f8ef7;
+      --accent-dk: #3a72d8;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --error:     #f87171;
+      --success:   #34d399;
+      --font:      'DM Sans', sans-serif;
+      --mono:      'DM Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 44px;
+      width: 420px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+
+    .logo-text  { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+    .logo-sub   { font-size: 11px; font-family: var(--mono); color: var(--muted);
+                  letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; }
+
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+
+    .field { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 14px; font-family: var(--font);
+      color: var(--text);
+      transition: border-color 0.2s; outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+    .btn:hover  { background: var(--accent-dk); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .error-msg {
+      background: rgba(248,113,113,0.12);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--error);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 13px; margin-top: 16px; display: none;
+    }
+
+    .footer-note {
+      text-align: center; font-size: 12px;
+      color: var(--muted); margin-top: 28px; font-family: var(--mono);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">Student Nexus</div>
+        <div class="logo-sub">Teacher Portal</div>
+      </div>
+    </div>
+
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in with your teacher credentials to continue.</p>
+
+    <div class="field">
+      <label>Teacher ID</label>
+      <input type="text" id="username" placeholder="e.g. TCH001" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+
+    <button class="btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="error-msg" id="errMsg"></div>
+
+    <div class="footer-note">Student Nexus &mdash; Faculty Access Only</div>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    // Already logged in? Skip straight to dashboard.
+    if (sessionStorage.getItem('teacherLoggedIn') === 'true') {
+      window.location.href = 'dashboard.html';
+    }
+
+    async function doLogin() {
+      const id  = document.getElementById('username').value.trim();
+      const pwd = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('errMsg');
+
+      err.style.display = 'none';
+      if (!id || !pwd) { showErr('Please enter Teacher ID and password.'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Signing in…';
+
+      try {
+        const res = await fetch(`${API}/api/teacher/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teacherId: id, password: pwd })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          sessionStorage.setItem('teacherToken',    data.token);
+          sessionStorage.setItem('teacherLoggedIn', 'true');
+          sessionStorage.setItem('teacherId',       data.teacherId);
+          sessionStorage.setItem('teacherName',     data.name);
+          window.location.href = 'dashboard.html';
+        } else {
+          const body = await res.json().catch(() => ({}));
+          showErr(body.error || 'Invalid Teacher ID or password.');
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+        }
+      } catch (e) {
+        showErr('Cannot reach server — make sure the backend is running on port 8080.');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    function showErr(msg) {
+      const err = document.getElementById('errMsg');
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
