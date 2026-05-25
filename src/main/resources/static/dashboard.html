@@ -1075,7 +1075,7 @@
         showToast(`Subject "${name}" added successfully.`);
 
         // Refresh attendance data
-        const aRes = await fetch(`${API}/api/attendance/${currentUSN}`);
+        const aRes = await fetch(`${API}/api/attendance/${currentUSN}`, { headers: authHeaders() });
         currentAttendanceData = await aRes.json();
 
         // Re-render with updated data, switching to the added subject's semester
