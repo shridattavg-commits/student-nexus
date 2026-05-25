@@ -1,8 +1,7 @@
 spring:
   data:
     mongodb:
-      # Uses MONGODB_URL env var on Railway, falls back to local for development
-      uri: ${MONGODB_URL:mongodb://localhost:27017/student_nexus_db}
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/student_nexus_db}
   security:
     user:
       name: ignored
