@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/student_nexus_db}
+      uri: "mongodb+srv://shridattavg_db_user:dattadbms24@studentnexus.iotewlg.mongodb.net/student_nexus_db?retryWrites=true&w=majority&appName=studentnexus"
   security:
     user:
       name: ignored
