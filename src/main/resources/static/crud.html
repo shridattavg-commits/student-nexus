@@ -717,7 +717,7 @@
                 document.getElementById('loginPass').focus();
             } else {
                 const err = await res.json().catch(() => ({}));
-                alert('Registration failed: ' + (err.message || 'USN may already exist.'));
+                alert('Registration failed: ' + (err.error || err.message || JSON.stringify(err)));
             }
         } catch {
             alert('Connection error — is the server running?');
