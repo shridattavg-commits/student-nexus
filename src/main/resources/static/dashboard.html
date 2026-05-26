@@ -506,9 +506,14 @@
             <div class="stat-sub">Registered in system</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Attendance Records</div>
+            <div class="stat-label">Subject Records</div>
             <div class="stat-value" id="statRecords">—</div>
-            <div class="stat-sub">Across all students</div>
+            <div class="stat-sub" id="statRecordsSub">Across all students</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Attendance</div>
+            <div class="stat-value" id="statAvg" style="font-size:22px;">—</div>
+            <div class="stat-sub" id="statAvgSub">Across all subjects</div>
           </div>
         </div>
 
@@ -634,6 +639,41 @@
         const list = await res.json();
         document.getElementById('statTotal').textContent = list.length;
         renderOverviewTable(list);
+
+        // Fetch attendance for all students in parallel and compute real stats
+        const attResults = await Promise.allSettled(
+          list.map(s => fetch(`${API}/api/attendance/${s.usn}`, { headers: authHeaders() }).then(r => r.json()))
+        );
+
+        let totalRecords = 0, totalAttended = 0, totalClasses = 0;
+        attResults.forEach(r => {
+          if (r.status !== 'fulfilled') return;
+          const semMap = r.value;
+          Object.values(semMap).forEach(records => {
+            records.forEach(rec => {
+              totalRecords++;
+              totalAttended += rec.classesAttended || 0;
+              totalClasses  += rec.totalClasses    || 0;
+            });
+          });
+        });
+
+        document.getElementById('statRecords').textContent = totalRecords || '0';
+        document.getElementById('statRecordsSub').textContent =
+          totalRecords === 1 ? '1 subject entry' : totalRecords + ' subject entries';
+
+        if (totalClasses > 0) {
+          const avg = Math.round(totalAttended * 100 / totalClasses);
+          const color = avg >= 75 ? 'var(--safe)' : avg >= 60 ? 'var(--warn)' : 'var(--danger)';
+          const el = document.getElementById('statAvg');
+          el.textContent = avg + '%';
+          el.style.color = color;
+          document.getElementById('statAvgSub').textContent =
+            totalAttended + ' / ' + totalClasses + ' classes attended';
+        } else {
+          document.getElementById('statAvg').textContent = 'N/A';
+          document.getElementById('statAvgSub').textContent = 'No records yet';
+        }
       } catch (e) {
         document.getElementById('overviewContent').innerHTML =
           `<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not connect</h3><p>Make sure the backend is running.</p></div>`;
@@ -641,7 +681,6 @@
     }
 
     function renderOverviewTable(students) {
-      document.getElementById('statRecords').textContent = '—';
       if (!students.length) {
         document.getElementById('overviewContent').innerHTML =
           '<div class="empty"><div class="empty-icon">🎓</div><h3>No students found</h3></div>';
