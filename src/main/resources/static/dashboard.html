@@ -439,6 +439,65 @@
     .modal select option { background: var(--surface); }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
+    /* ── Overview student cards ── */
+    .ov-card-grid { display: flex; flex-direction: column; gap: 10px; }
+    .ov-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.15s;
+    }
+    .ov-card:hover { border-color: var(--border2); }
+    .ov-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--accent-glow);
+      border: 1px solid rgba(79,142,247,0.35);
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .ov-info { flex: 1; min-width: 0; }
+    .ov-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ov-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ov-action-btn {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .ov-action-btn:hover { background: var(--accent); color: #fff; }
+
     /* ── Mobile ── */
     @media (max-width: 700px) {
       .main { padding: 16px; }
@@ -450,6 +509,10 @@
       .bulk-bar > div { display: flex; gap: 8px; }
       .bulk-bar > div .btn { flex: 1; }
       .modal-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .ov-card { flex-wrap: wrap; gap: 10px; }
+      .ov-action-btn { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -648,24 +711,22 @@
         return;
       }
 
-      const rows = students.map(s => `
-        <tr>
-          <td><strong>${s.name || '—'}</strong></td>
-          <td><span class="subject-code">${s.usn}</span></td>
-          <td>${s.branch || '—'}</td>
-          <td><span class="subject-code">Sem ${s.semester || '—'}</span></td>
-          <td><button class="save-row-btn" onclick="quickJump('${s.usn}')">View Attendance →</button></td>
-        </tr>`).join('');
+      const cards = students.map(s => {
+        const initials = (s.name || 'S')
+          .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        return `
+          <div class="ov-card">
+            <div class="ov-avatar">${initials}</div>
+            <div class="ov-info">
+              <div class="ov-name">${s.name || '—'}</div>
+              <div class="ov-meta">${s.usn} · ${s.branch || '—'} · Sem ${s.semester || '—'}</div>
+            </div>
+            <button class="ov-action-btn" onclick="quickJump('${s.usn}')">View Attendance →</button>
+          </div>`;
+      }).join('');
 
-      document.getElementById('overviewContent').innerHTML = `
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Name</th><th>USN</th><th>Branch</th><th>Semester</th><th>Action</th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-        </div>`;
+      document.getElementById('overviewContent').innerHTML =
+        `<div class="ov-card-grid">${cards}</div>`;
     }
 
     function quickJump(usn) {
