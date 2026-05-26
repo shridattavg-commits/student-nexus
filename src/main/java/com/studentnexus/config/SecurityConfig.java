@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,    "/api/student/all").hasRole("TEACHER")
                 .requestMatchers(HttpMethod.DELETE, "/api/student/**").hasRole("TEACHER")
                 .requestMatchers(HttpMethod.POST,   "/api/grades").hasRole("TEACHER")
-                .requestMatchers(HttpMethod.PUT,    "/api/grades/**").hasRole("TEACHER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/grades/**").hasRole("TEACHER")
                 .requestMatchers(HttpMethod.DELETE, "/api/grades/**").hasRole("TEACHER")
 
                 // ── Everything else requires any valid JWT ──
