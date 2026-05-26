@@ -987,7 +987,7 @@
             if (!res.ok) throw new Error();
 
             const data = await res.json();
-            const semKey = currentUser.semester;
+            const semKey = Object.keys(data)[0];
             const records = (data[semKey] || data[String(semKey)] || []);
 
             if (!records.length) {
@@ -1121,7 +1121,7 @@
             if (!res.ok) throw new Error();
 
             const data = await res.json();
-            const semKey = currentUser.semester;
+            const semKey = Object.keys(data)[0];
 
             document.getElementById('gradesSemChip').innerText =
                 semKey ? 'Sem ' + semKey : 'Sem —';
