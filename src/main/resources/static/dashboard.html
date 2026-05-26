@@ -627,7 +627,7 @@
   <div class="modal-overlay" id="addGradesModal">
     <div class="modal">
       <h3>Add Grade Subject</h3>
-      <p class="modal-sub">Add a new grade record for <strong id="gradesModalUSN"></strong></p>
+      <p class="modal-sub">Add a subject for <strong id="gradesModalUSN"></strong></p>
 
       <div class="modal-grid">
         <div class="full">
@@ -654,25 +654,6 @@
           </select>
         </div>
 
-        <div>
-          <label>Internal Marks</label>
-          <input type="number" id="gradeInternal" value="0" min="0" />
-        </div>
-
-        <div>
-          <label>External Marks</label>
-          <input type="number" id="gradeExternal" value="0" min="0" />
-        </div>
-
-        <div>
-          <label>Max Internal</label>
-          <input type="number" id="gradeMaxInternal" value="50" min="1" />
-        </div>
-
-        <div>
-          <label>Max External</label>
-          <input type="number" id="gradeMaxExternal" value="50" min="1" />
-        </div>
       </div>
 
       <div class="modal-actions">
@@ -1172,7 +1153,7 @@
         <div id="gradesSemContent"></div>
 
         <div class="bulk-bar" id="gradesBulkBar">
-          <span class="bulk-note">Edit marks and save grade rows.</span>
+          <span class="bulk-note">Add subjects first, then update grades separately.</span>
 
           <div style="display:flex;gap:10px;">
             <button class="btn secondary" onclick="openAddGradesModal()">
@@ -1437,10 +1418,10 @@
         semester: Number(document.getElementById('gradeSemester').value),
         subjectName: document.getElementById('gradeSubjectName').value.trim(),
         subjectCode: document.getElementById('gradeSubjectCode').value.trim(),
-        internalMarks: Number(document.getElementById('gradeInternal').value || 0),
-        externalMarks: Number(document.getElementById('gradeExternal').value || 0),
-        maxInternal: Number(document.getElementById('gradeMaxInternal').value || 50),
-        maxExternal: Number(document.getElementById('gradeMaxExternal').value || 50)
+        internalMarks: 0,
+        externalMarks: 0,
+        maxInternal: 50,
+        maxExternal: 100
       };
 
       if (!payload.subjectName || !payload.subjectCode) {
@@ -1460,7 +1441,7 @@
 
         closeGradesModal();
 
-        showToast('Grade subject added successfully.');
+        showToast('Subject added successfully. You can now enter grades separately.');
 
         fetchGrades();
 
