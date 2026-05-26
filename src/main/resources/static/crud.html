@@ -640,7 +640,10 @@
                     <input type="file" id="hiddenPhotoInput" style="display:none;" accept="image/*" onchange="uploadPhoto(event)">
                 </div>
                 <div class="profile-identity">
-                    <h2 id="dashName">—</h2>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <h2 id="dashName">—</h2>
+                        <button onclick="openEditProfile()" title="Edit Profile" style="background:none;border:1px solid var(--border2);border-radius:7px;color:var(--muted);padding:4px 8px;font-size:13px;cursor:pointer;line-height:1;transition:color 0.2s,border-color 0.2s;flex-shrink:0;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">✏️</button>
+                    </div>
                     <div class="usn-badge" id="dashUsnBadge">—</div>
                 </div>
             </div>
@@ -667,9 +670,6 @@
             <div class="action-strip">
                 <button class="btn-view-att" onclick="toggleAttendanceView()">
                     📊 View Attendance
-                </button>
-                <button class="btn-view-att" onclick="openEditProfile()" style="background: var(--surface2); border-color: var(--border2);">
-                    ✏️ Edit Profile
                 </button>
                 <a id="dashPortfolio" href="#" target="_blank" class="btn-portfolio no-portfolio">
                     🌐 Portfolio Not Added
