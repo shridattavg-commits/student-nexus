@@ -671,6 +671,9 @@
                 <button class="btn-view-att" onclick="toggleAttendanceView()">
                     📊 View Attendance
                 </button>
+                <button class="btn-view-att" onclick="toggleGradesView()">
+                    📈 My Grades
+                </button>
                 <a id="dashPortfolio" href="#" target="_blank" class="btn-portfolio no-portfolio">
                     🌐 Portfolio Not Added
                 </a>
@@ -684,6 +687,16 @@
             </div>
             <div id="attendanceContent">
                 <div class="empty-state">Loading...</div>
+            </div>
+        </div>
+
+        <div id="gradesDisplayCard" class="content-card" style="display:none; margin-top:20px;">
+            <div class="content-card-header">
+                <h3>My Grades</h3>
+                <span class="sem-chip" id="gradesSemChip">Sem —</span>
+            </div>
+            <div id="gradesContent">
+                <div class="empty-state">Loading grades...</div>
             </div>
         </div>
 
@@ -733,6 +746,7 @@
 <script>
     const API_BASE        = window.location.origin + '/api/student';
     const ATTENDANCE_BASE = window.location.origin + '/api/attendance';
+    const GRADES_BASE     = window.location.origin + '/api/grades';
     let currentUser = null;
     let authToken   = null;
 
@@ -911,6 +925,7 @@
         }
 
         fetchMyAttendance();
+        fetchMyGrades();
     }
 
     /* ─── TOGGLE ATTENDANCE ─── */
@@ -1075,6 +1090,113 @@
             showEditToast('✗ Failed to save — please try again', 'err');
         }
     }
+
+    
+    /* ─── GRADE HELPERS ─── */
+    function gradeLabel(pct) {
+        if (pct >= 75) return { label: 'O', cls: 'pct-safe' };
+        if (pct >= 65) return { label: 'A+', cls: 'pct-safe' };
+        if (pct >= 55) return { label: 'A', cls: 'pct-warn' };
+        if (pct >= 45) return { label: 'B+', cls: 'pct-warn' };
+        if (pct >= 40) return { label: 'B', cls: 'pct-danger' };
+        return { label: 'F', cls: 'pct-danger' };
+    }
+
+    function toggleGradesView() {
+        const card = document.getElementById('gradesDisplayCard');
+        card.style.display = card.style.display !== 'none' ? 'none' : 'block';
+
+        if (card.style.display === 'block') {
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    async function fetchMyGrades() {
+        if (!currentUser) return;
+
+        try {
+            const headers = authToken ? { 'Authorization': 'Bearer ' + authToken } : {};
+            const res = await fetch(`${GRADES_BASE}/${currentUser.usn}`, { headers });
+
+            if (!res.ok) throw new Error();
+
+            const data = await res.json();
+            const semKey = currentUser.semester;
+
+            document.getElementById('gradesSemChip').innerText =
+                semKey ? 'Sem ' + semKey : 'Sem —';
+
+            const records = data[semKey] || data[String(semKey)] || [];
+
+            if (!records.length) {
+                document.getElementById('gradesContent').innerHTML =
+                    `<div class="empty-state">No grades available for Semester ${semKey || '—'}.</div>`;
+                return;
+            }
+
+            const rows = records.map(r => {
+                const internal = Number(r.internalMarks || 0);
+                const external = Number(r.externalMarks || 0);
+                const maxInt = Number(r.maxInternal || 50);
+                const maxExt = Number(r.maxExternal || 50);
+
+                const total = internal + external;
+                const maxTotal = maxInt + maxExt;
+
+                const pct = maxTotal > 0
+                    ? Math.round((total / maxTotal) * 100)
+                    : 0;
+
+                const grade = gradeLabel(pct);
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="subject-name">${r.subjectName || '—'}</div>
+                            <div class="subject-code">${r.subjectCode || ''}</div>
+                        </td>
+                        <td style="font-family:var(--mono);font-size:13px;">
+                            ${internal} / ${maxInt}
+                        </td>
+                        <td style="font-family:var(--mono);font-size:13px;">
+                            ${external} / ${maxExt}
+                        </td>
+                        <td>
+                            <span class="pct-badge ${grade.cls}">
+                                ${pct}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="pct-badge ${grade.cls}">
+                                ${grade.label}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('gradesContent').innerHTML = `
+                <div class="table-scroll">
+                    <table style="min-width:700px;">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Internal</th>
+                                <th>External</th>
+                                <th>Total %</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        } catch {
+            document.getElementById('gradesContent').innerHTML =
+                `<div class="empty-state">Could not load grades data.</div>`;
+        }
+    }
+
 
     /* ─── AUTO-RESTORE SESSION ─── */
     window.onload = () => {

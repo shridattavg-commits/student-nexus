@@ -484,6 +484,10 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
           Attendance
         </a>
+        <a class="nav-item" id="nav-grades" onclick="showPage('grades')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 15L5 14.18v2L12 20l7-3.82v-2L12 18z"/></svg>
+          Grades
+        </a>
       </div>
     </nav>
 
@@ -523,7 +527,32 @@
         </div>
       </div>
 
-      <!-- ATTENDANCE PAGE -->
+      
+      <!-- GRADES PAGE -->
+      <div class="page" id="page-grades">
+        <div class="page-head">
+          <div class="page-title">
+            <h2>Grades</h2>
+            <p>Search a student by USN to view and update grades.</p>
+          </div>
+        </div>
+
+        <div class="search-row">
+          <input class="search-input" type="text" id="gradesUsnInput" placeholder="Enter USN (e.g. 1RV22CS001)" />
+          <button class="btn" onclick="fetchGrades()">Fetch Grades</button>
+          <button class="btn secondary" onclick="clearGrades()">Clear</button>
+        </div>
+
+        <div id="gradesContent">
+          <div class="empty">
+            <div class="empty-icon">📈</div>
+            <h3>No student loaded</h3>
+            <p>Enter a USN above and click Fetch Grades.</p>
+          </div>
+        </div>
+      </div>
+
+<!-- ATTENDANCE PAGE -->
       <div class="page" id="page-attendance">
         <div class="page-head">
           <div class="page-title">
@@ -591,6 +620,66 @@
         <button class="btn" onclick="submitAddSubject()">Add Subject</button>
       </div>
     </div>
+  
+  </div>
+
+  <!-- Add Grades Subject Modal -->
+  <div class="modal-overlay" id="addGradesModal">
+    <div class="modal">
+      <h3>Add Grade Subject</h3>
+      <p class="modal-sub">Add a new grade record for <strong id="gradesModalUSN"></strong></p>
+
+      <div class="modal-grid">
+        <div class="full">
+          <label>Subject Name</label>
+          <input type="text" id="gradeSubjectName" placeholder="e.g. DBMS" />
+        </div>
+
+        <div>
+          <label>Subject Code</label>
+          <input type="text" id="gradeSubjectCode" placeholder="e.g. CS502" />
+        </div>
+
+        <div>
+          <label>Semester</label>
+          <select id="gradeSemester">
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Internal Marks</label>
+          <input type="number" id="gradeInternal" value="0" min="0" />
+        </div>
+
+        <div>
+          <label>External Marks</label>
+          <input type="number" id="gradeExternal" value="0" min="0" />
+        </div>
+
+        <div>
+          <label>Max Internal</label>
+          <input type="number" id="gradeMaxInternal" value="50" min="1" />
+        </div>
+
+        <div>
+          <label>Max External</label>
+          <input type="number" id="gradeMaxExternal" value="50" min="1" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="closeGradesModal()">Cancel</button>
+        <button class="btn" onclick="submitAddGradeSubject()">Add Subject</button>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -599,6 +688,9 @@
     const API = window.location.origin;
     let currentUSN = null;
     let currentAttendanceData = {};
+
+    let currentGradesUSN = null;
+    let currentGradesData = {};
 
     if (sessionStorage.getItem('teacherLoggedIn') !== 'true') {
       window.location.href = 'login.html';
@@ -974,6 +1066,411 @@
         showToast('Failed to add subject.', 'error');
       }
     }
+
+    
+    /* ─── GRADES ─── */
+
+    function gradeLabel(pct) {
+      if (pct >= 75) return { label: 'O', cls: 'safe' };
+      if (pct >= 65) return { label: 'A+', cls: 'safe' };
+      if (pct >= 55) return { label: 'A', cls: 'warn' };
+      if (pct >= 45) return { label: 'B+', cls: 'warn' };
+      if (pct >= 40) return { label: 'B', cls: 'danger' };
+      return { label: 'F', cls: 'danger' };
+    }
+
+    async function fetchGrades() {
+      const usn = document.getElementById('gradesUsnInput').value.trim().toUpperCase();
+
+      if (!usn) {
+        showToast('Please enter a USN.', 'error');
+        return;
+      }
+
+      currentGradesUSN = usn;
+
+      const el = document.getElementById('gradesContent');
+      el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
+
+      try {
+        const [sRes, gRes] = await Promise.all([
+          fetch(`${API}/api/student/dashboard/${usn}`, { headers: authHeaders() }),
+          fetch(`${API}/api/grades/${usn}`, { headers: authHeaders() })
+        ]);
+
+        if (!sRes.ok) throw new Error();
+
+        const student = await sRes.json();
+        const gradesMap = await gRes.json();
+
+        currentGradesData = gradesMap;
+
+        renderGradesPage(student, gradesMap);
+
+      } catch {
+        el.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">❌</div>
+            <h3>Student not found</h3>
+            <p>No student with USN <strong>${usn}</strong>.</p>
+          </div>`;
+      }
+    }
+
+    function clearGrades() {
+      currentGradesUSN = null;
+      currentGradesData = {};
+      document.getElementById('gradesUsnInput').value = '';
+
+      document.getElementById('gradesContent').innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">📈</div>
+          <h3>No student loaded</h3>
+          <p>Enter a USN above and click Fetch Grades.</p>
+        </div>`;
+    }
+
+    function renderGradesPage(student, gradesMap) {
+
+      const semesters = Object.keys(gradesMap).map(Number).sort((a,b)=>a-b);
+      const defaultSem = semesters.length ? semesters[semesters.length - 1] : null;
+
+      let photoSrc;
+      if (student.photoUrl && student.photoUrl.trim() && student.photoUrl !== 'null') {
+        photoSrc = student.photoUrl.startsWith('http')
+          ? student.photoUrl
+          : API + student.photoUrl;
+      } else {
+        photoSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name||'S')}&background=1e2435&color=4f8ef7&bold=true`;
+      }
+
+      const semTabs = semesters.map(sem =>
+        `<button class="sem-tab${sem === defaultSem ? ' active' : ''}"
+          onclick="switchGradesSem(${sem})"
+          id="grades-sem-tab-${sem}">
+          Sem ${sem}
+        </button>`
+      ).join('');
+
+      document.getElementById('gradesContent').innerHTML = `
+        <div class="student-card">
+          <img class="student-avatar" src="${photoSrc}" />
+          <div class="student-info">
+            <h3>${student.name}</h3>
+            <div class="meta">
+              <span>${student.usn}</span>
+              <span>${student.branch || ''}</span>
+              <span>Sem ${student.semester || ''}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sem-tabs">
+          ${semTabs || '<span style="color:var(--muted)">No grades found.</span>'}
+        </div>
+
+        <div id="gradesSemContent"></div>
+
+        <div class="bulk-bar" id="gradesBulkBar">
+          <span class="bulk-note">Edit marks and save grade rows.</span>
+
+          <div style="display:flex;gap:10px;">
+            <button class="btn secondary" onclick="openAddGradesModal()">
+              + Add Subject
+            </button>
+
+            <button class="btn" onclick="saveAllGradeRows()">
+              Save All
+            </button>
+          </div>
+        </div>
+      `;
+
+      if (defaultSem) switchGradesSem(defaultSem);
+    }
+
+    function switchGradesSem(sem) {
+
+      document.querySelectorAll('[id^="grades-sem-tab-"]')
+        .forEach(t => t.classList.remove('active'));
+
+      const active = document.getElementById(`grades-sem-tab-${sem}`);
+      if (active) active.classList.add('active');
+
+      const records = currentGradesData[sem] || [];
+
+      if (!records.length) {
+        document.getElementById('gradesSemContent').innerHTML =
+          '<div class="empty"><div class="empty-icon">📭</div><h3>No records</h3></div>';
+        return;
+      }
+
+      const rows = records.map(r => {
+
+        const internal = Number(r.internalMarks || 0);
+        const external = Number(r.externalMarks || 0);
+
+        const maxInt = Number(r.maxInternal || 50);
+        const maxExt = Number(r.maxExternal || 50);
+
+        const pct = Math.round(
+          ((internal + external) / (maxInt + maxExt)) * 100
+        );
+
+        const grade = gradeLabel(pct);
+
+        return `
+          <tr id="grade-row-${r.id}">
+            <td>
+              <div style="font-weight:500">${r.subjectName}</div>
+              <div class="subject-code">${r.subjectCode}</div>
+            </td>
+
+            <td>
+              <input class="num-input"
+                id="gint-${r.id}"
+                type="number"
+                value="${internal}"
+                min="0"
+                onchange="markGradeDirty('${r.id}')"/>
+            </td>
+
+            <td>
+              <input class="num-input"
+                id="gext-${r.id}"
+                type="number"
+                value="${external}"
+                min="0"
+                onchange="markGradeDirty('${r.id}')"/>
+            </td>
+
+            <td>${maxInt}</td>
+            <td>${maxExt}</td>
+
+            <td>
+              <span class="pct-badge ${grade.cls}" id="gpct-${r.id}">
+                ${pct}%
+              </span>
+            </td>
+
+            <td>
+              <span class="pct-badge ${grade.cls}" id="ggrade-${r.id}">
+                ${grade.label}
+              </span>
+            </td>
+
+            <td>
+              <button class="save-row-btn grade-save-btn"
+                id="gsavebtn-${r.id}"
+                onclick="saveGradeRow('${r.id}')">
+                Save
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('gradesSemContent').innerHTML = `
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table style="min-width:700px;">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Internal</th>
+                  <th>External</th>
+                  <th>Max Int</th>
+                  <th>Max Ext</th>
+                  <th>Total %</th>
+                  <th>Grade</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function markGradeDirty(id) {
+
+      const btn = document.getElementById(`gsavebtn-${id}`);
+
+      if (btn) {
+        btn.classList.remove('saved');
+        btn.textContent = 'Save';
+      }
+
+      const internal = Number(document.getElementById(`gint-${id}`).value || 0);
+      const external = Number(document.getElementById(`gext-${id}`).value || 0);
+
+      const row = document.getElementById(`grade-row-${id}`);
+
+      const maxInt = Number(row.children[3].textContent || 50);
+      const maxExt = Number(row.children[4].textContent || 50);
+
+      const pct = Math.round(
+        ((internal + external) / (maxInt + maxExt)) * 100
+      );
+
+      const grade = gradeLabel(pct);
+
+      const pctEl = document.getElementById(`gpct-${id}`);
+      pctEl.className = `pct-badge ${grade.cls}`;
+      pctEl.textContent = `${pct}%`;
+
+      const gradeEl = document.getElementById(`ggrade-${id}`);
+      gradeEl.className = `pct-badge ${grade.cls}`;
+      gradeEl.textContent = grade.label;
+    }
+
+    async function saveGradeRow(id) {
+
+      const internal = Number(document.getElementById(`gint-${id}`).value || 0);
+      const external = Number(document.getElementById(`gext-${id}`).value || 0);
+
+      const btn = document.getElementById(`gsavebtn-${id}`);
+
+      btn.disabled = true;
+      btn.textContent = '…';
+
+      try {
+
+        const res = await fetch(`${API}/api/grades/${id}`, {
+          method: 'PATCH',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            internalMarks: internal,
+            externalMarks: external
+          })
+        });
+
+        if (!res.ok) throw new Error();
+
+        btn.textContent = '✓ Saved';
+        btn.classList.add('saved');
+        btn.disabled = false;
+
+        showToast('Grades updated successfully.');
+
+      } catch {
+
+        btn.textContent = 'Save';
+        btn.disabled = false;
+
+        showToast('Failed to save grades.', 'error');
+      }
+    }
+
+    async function saveAllGradeRows() {
+
+      const rows = document.querySelectorAll('.grade-save-btn');
+
+      let ok = 0;
+      let fail = 0;
+
+      for (const btn of rows) {
+
+        const id = btn.id.replace('gsavebtn-', '');
+
+        try {
+
+          const internal = Number(document.getElementById(`gint-${id}`).value || 0);
+          const external = Number(document.getElementById(`gext-${id}`).value || 0);
+
+          const res = await fetch(`${API}/api/grades/${id}`, {
+            method: 'PATCH',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              internalMarks: internal,
+              externalMarks: external
+            })
+          });
+
+          if (!res.ok) throw new Error();
+
+          btn.textContent = '✓ Saved';
+          btn.classList.add('saved');
+
+          ok++;
+
+        } catch {
+          fail++;
+        }
+      }
+
+      showToast(
+        fail === 0
+          ? `All ${ok} grade records saved.`
+          : `${ok} saved, ${fail} failed.`,
+        fail > 0 ? 'error' : 'success'
+      );
+    }
+
+    function openAddGradesModal() {
+
+      if (!currentGradesUSN) {
+        showToast('Fetch a student first.', 'error');
+        return;
+      }
+
+      document.getElementById('gradesModalUSN').textContent = currentGradesUSN;
+
+      document.getElementById('addGradesModal').classList.add('open');
+    }
+
+    function closeGradesModal() {
+      document.getElementById('addGradesModal').classList.remove('open');
+    }
+
+    document.getElementById('addGradesModal')
+      .addEventListener('click', function(e) {
+        if (e.target === this) closeGradesModal();
+      });
+
+    async function submitAddGradeSubject() {
+
+      const payload = {
+        usn: currentGradesUSN,
+        semester: Number(document.getElementById('gradeSemester').value),
+        subjectName: document.getElementById('gradeSubjectName').value.trim(),
+        subjectCode: document.getElementById('gradeSubjectCode').value.trim(),
+        internalMarks: Number(document.getElementById('gradeInternal').value || 0),
+        externalMarks: Number(document.getElementById('gradeExternal').value || 0),
+        maxInternal: Number(document.getElementById('gradeMaxInternal').value || 50),
+        maxExternal: Number(document.getElementById('gradeMaxExternal').value || 50)
+      };
+
+      if (!payload.subjectName || !payload.subjectCode) {
+        showToast('Subject name and code required.', 'error');
+        return;
+      }
+
+      try {
+
+        const res = await fetch(`${API}/api/grades`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error();
+
+        closeGradesModal();
+
+        showToast('Grade subject added successfully.');
+
+        fetchGrades();
+
+      } catch {
+
+        showToast('Failed to add grade subject.', 'error');
+      }
+    }
+
+
 
     const storedName = sessionStorage.getItem('teacherName');
     if (storedName) document.getElementById('headerTeacherName').textContent = storedName;
