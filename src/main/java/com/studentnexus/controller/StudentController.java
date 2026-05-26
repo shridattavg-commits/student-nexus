@@ -155,4 +155,25 @@ public class StudentController {
                     .body(Map.of("error", "Upload failed: " + e.getMessage()));
         }
     }
+    @PutMapping("/{usn}")
+    public ResponseEntity<?> updateStudent(
+            @PathVariable String usn,
+            @RequestBody StudentInfo updatedStudent) {
+
+        return repo.findById(usn)
+                .map(student -> {
+
+                    student.setName(updatedStudent.getName());
+                    student.setEmailId(updatedStudent.getEmailId());
+                    student.setPhoneNo(updatedStudent.getPhoneNo());
+                    student.setBranch(updatedStudent.getBranch());
+                    student.setSemester(updatedStudent.getSemester());
+                    student.setPortFolioUrl(updatedStudent.getPortFolioUrl());
+
+                    repo.save(student);
+
+                    return ResponseEntity.ok(student);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
