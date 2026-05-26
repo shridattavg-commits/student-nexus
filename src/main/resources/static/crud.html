@@ -465,6 +465,75 @@
             .content-card { padding: 20px 16px; }
             body { align-items: flex-start; padding-top: 32px; }
         }
+
+        /* ─── Edit Profile Modal ─── */
+        .edit-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 300;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .edit-modal-backdrop.open { opacity: 1; pointer-events: all; }
+        .edit-modal {
+            background: var(--panel);
+            border: 1px solid var(--border2);
+            border-radius: 16px;
+            padding: 28px 24px;
+            width: 100%; max-width: 480px;
+            max-height: 90vh; overflow-y: auto;
+            transform: translateY(16px);
+            transition: transform 0.2s;
+        }
+        .edit-modal-backdrop.open .edit-modal { transform: translateY(0); }
+        .edit-modal h3 {
+            font-size: 17px; font-weight: 600;
+            margin-bottom: 18px; color: var(--text);
+        }
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .edit-grid .edit-full { grid-column: 1 / -1; }
+        .edit-field label {
+            display: block; font-size: 11px;
+            font-family: var(--mono); letter-spacing: 0.06em;
+            text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+        }
+        .edit-field input {
+            width: 100%; background: var(--bg);
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 9px 12px; font-size: 13px;
+            font-family: var(--font); color: var(--text); outline: none;
+            transition: border-color 0.2s;
+        }
+        .edit-field input:focus { border-color: var(--accent); }
+        .edit-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel {
+            background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--muted); padding: 9px 18px; border-radius: 8px;
+            font-size: 13px; font-family: var(--font); cursor: pointer;
+            transition: color 0.2s;
+        }
+        .btn-cancel:hover { color: var(--text); }
+        .edit-toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--surface2); border: 1px solid var(--border2);
+            border-radius: 10px; padding: 11px 18px;
+            font-size: 13px; font-weight: 500; z-index: 400;
+            transform: translateY(60px); opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .edit-toast.show { transform: translateY(0); opacity: 1; }
+        .edit-toast.ok  { border-color: rgba(45,206,168,0.4); color: var(--safe); }
+        .edit-toast.err { border-color: rgba(240,107,107,0.4); color: var(--danger); }
+        @media (max-width: 480px) {
+            .edit-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -599,6 +668,9 @@
                 <button class="btn-view-att" onclick="toggleAttendanceView()">
                     📊 View Attendance
                 </button>
+                <button class="btn-view-att" onclick="openEditProfile()" style="background: var(--surface2); border-color: var(--border2);">
+                    ✏️ Edit Profile
+                </button>
                 <a id="dashPortfolio" href="#" target="_blank" class="btn-portfolio no-portfolio">
                     🌐 Portfolio Not Added
                 </a>
@@ -614,6 +686,45 @@
                 <div class="empty-state">Loading...</div>
             </div>
         </div>
+
+        <!-- Edit Profile Modal -->
+        <div class="edit-modal-backdrop" id="editProfileModal">
+            <div class="edit-modal">
+                <h3>Edit Profile</h3>
+                <div class="edit-grid">
+                    <div class="edit-field edit-full">
+                        <label>Full Name</label>
+                        <input type="text" id="ep_name" placeholder="Your full name">
+                    </div>
+                    <div class="edit-field">
+                        <label>Email</label>
+                        <input type="email" id="ep_email" placeholder="you@example.com">
+                    </div>
+                    <div class="edit-field">
+                        <label>Phone</label>
+                        <input type="tel" id="ep_phone" placeholder="10-digit number">
+                    </div>
+                    <div class="edit-field">
+                        <label>Branch</label>
+                        <input type="text" id="ep_branch" placeholder="e.g. CSE / CCE">
+                    </div>
+                    <div class="edit-field">
+                        <label>Semester</label>
+                        <input type="number" id="ep_semester" min="1" max="8" placeholder="1–8">
+                    </div>
+                    <div class="edit-field edit-full">
+                        <label>Portfolio URL</label>
+                        <input type="url" id="ep_portfolio" placeholder="https://yourportfolio.com">
+                    </div>
+                </div>
+                <div class="edit-actions">
+                    <button class="btn-cancel" onclick="closeEditProfile()">Cancel</button>
+                    <button class="btn-primary" style="padding: 9px 22px; font-size: 13px;"
+                        onclick="saveProfile()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+        <div class="edit-toast" id="editToast"></div>
 
     </div>
 
@@ -894,6 +1005,74 @@
         } catch {
             document.getElementById('attendanceContent').innerHTML =
                 `<div class="empty-state">Could not load attendance data.</div>`;
+        }
+    }
+
+    /* ─── EDIT PROFILE ─── */
+    function openEditProfile() {
+        if (!currentUser) return;
+        document.getElementById('ep_name').value      = currentUser.name      || '';
+        document.getElementById('ep_email').value     = currentUser.emailId   || '';
+        document.getElementById('ep_phone').value     = currentUser.phoneNo   || currentUser.phone || '';
+        document.getElementById('ep_branch').value    = currentUser.branch    || '';
+        document.getElementById('ep_semester').value  = currentUser.semester  || '';
+        document.getElementById('ep_portfolio').value = currentUser.portFolioUrl || currentUser.portfolioUrl || '';
+        document.getElementById('editProfileModal').classList.add('open');
+    }
+
+    function closeEditProfile() {
+        document.getElementById('editProfileModal').classList.remove('open');
+    }
+
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('editProfileModal');
+        if (modal && e.target === modal) closeEditProfile();
+    });
+
+    function showEditToast(msg, type) {
+        const t = document.getElementById('editToast');
+        t.className = `edit-toast ${type} show`;
+        t.textContent = msg;
+        clearTimeout(t._t);
+        t._t = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function saveProfile() {
+        if (!currentUser) return;
+        const payload = {
+            name:         document.getElementById('ep_name').value.trim(),
+            emailId:      document.getElementById('ep_email').value.trim(),
+            phoneNo:      document.getElementById('ep_phone').value.trim(),
+            branch:       document.getElementById('ep_branch').value.trim(),
+            semester:     parseInt(document.getElementById('ep_semester').value) || null,
+            portFolioUrl: document.getElementById('ep_portfolio').value.trim()
+        };
+        try {
+            const res = await fetch(`${API_BASE}/${currentUser.usn}`, {
+                method:  'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken ? { 'Authorization': 'Bearer ' + authToken } : {})
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error();
+
+            const profileRes = await fetch(`${API_BASE}/dashboard/${currentUser.usn}`, {
+                headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
+            });
+            if (profileRes.ok) {
+                currentUser = await profileRes.json();
+                sessionStorage.setItem('sn_user', JSON.stringify(currentUser));
+            } else {
+                Object.assign(currentUser, payload);
+                sessionStorage.setItem('sn_user', JSON.stringify(currentUser));
+            }
+            closeEditProfile();
+            showDashboard();
+            showEditToast('✓ Profile updated successfully', 'ok');
+        } catch {
+            showEditToast('✗ Failed to save — please try again', 'err');
         }
     }
 

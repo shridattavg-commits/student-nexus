@@ -648,24 +648,48 @@
         return;
       }
 
-      const rows = students.map(s => `
-        <tr>
-          <td><strong>${s.name || '—'}</strong></td>
-          <td><span class="subject-code">${s.usn}</span></td>
-          <td>${s.branch || '—'}</td>
-          <td><span class="subject-code">Sem ${s.semester || '—'}</span></td>
-          <td><button class="save-row-btn" onclick="quickJump('${s.usn}')">View Attendance →</button></td>
-        </tr>`).join('');
+      const cards = students.map(s => {
+        const initials = (s.name || 'S')
+          .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+        const meta = [s.usn, s.branch, s.semester ? `Sem ${s.semester}` : null]
+          .filter(Boolean).join(' · ');
+        return `
+          <div style="
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+          ">
+            <div style="
+              width: 42px; height: 42px; border-radius: 50%;
+              background: var(--accent-glow);
+              border: 1px solid rgba(79,142,247,0.35);
+              display: flex; align-items: center; justify-content: center;
+              font-size: 14px; font-weight: 600; color: var(--accent);
+              flex-shrink: 0; font-family: var(--mono);
+            ">${initials}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 600; color: var(--text);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${s.name || '—'}
+              </div>
+              <div style="font-size: 12px; color: var(--muted); font-family: var(--mono);
+                margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${meta}
+              </div>
+            </div>
+            <button class="save-row-btn" onclick="quickJump('${s.usn}')"
+              style="flex-shrink: 0; white-space: nowrap;">
+              View Attendance →
+            </button>
+          </div>`;
+      }).join('');
 
-      document.getElementById('overviewContent').innerHTML = `
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Name</th><th>USN</th><th>Branch</th><th>Semester</th><th>Action</th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-        </div>`;
+      document.getElementById('overviewContent').innerHTML =
+        `<div style="display: flex; flex-direction: column; gap: 10px;">${cards}</div>`;
     }
 
     function quickJump(usn) {
