@@ -190,16 +190,20 @@
         }
         .register-prompt a:hover { text-decoration: underline; }
 
+        /* ── REGISTER PAGE (full screen, not a card below login) ── */
+        #registerSection {
+            display: none;
+            animation: fadeUp 0.3s ease both;
+        }
+
         .register-card {
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 40px 48px;
             max-width: 560px;
-            margin: 24px auto 0;
+            margin: 0 auto;
             box-shadow: 0 16px 56px rgba(0,0,0,0.4);
-            display: none;
-            animation: fadeUp 0.3s ease both;
             position: relative;
             overflow: hidden;
         }
@@ -218,20 +222,17 @@
         }
         .register-grid .full-width { grid-column: 1 / -1; }
 
-        .close-register {
-            position: absolute;
-            top: 18px; right: 20px;
-            background: none;
-            border: none;
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             color: var(--muted);
+            font-size: 13px;
             cursor: pointer;
-            font-size: 18px;
-            line-height: 1;
-            padding: 4px;
-            border-radius: 6px;
-            transition: color 0.15s, background 0.15s;
+            margin-bottom: 24px;
+            transition: color 0.15s;
         }
-        .close-register:hover { color: var(--text); background: var(--surface2); }
+        .back-link:hover { color: var(--accent); }
 
         #dashboardSection {
             display: none;
@@ -411,7 +412,14 @@
             font-weight: 500;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        /* FIX: scrollable table on mobile */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 320px; }
         th {
             padding: 10px 16px;
             text-align: left;
@@ -421,6 +429,7 @@
             letter-spacing: 0.8px;
             color: var(--muted);
             border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
         td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
@@ -453,6 +462,8 @@
             .register-grid { grid-template-columns: 1fr; }
             .info-grid { grid-template-columns: 1fr 1fr; }
             .profile-header { flex-direction: column; align-items: flex-start; }
+            .content-card { padding: 20px 16px; }
+            body { align-items: flex-start; padding-top: 32px; }
         }
     </style>
 </head>
@@ -460,14 +471,13 @@
 
 <div class="container">
 
-    <!-- ─── AUTH SECTION ─── -->
+    <!-- ─── AUTH SECTION (Login) ─── -->
     <div id="authSection">
         <div class="logo-bar">
             <div class="logo-text">Student<span>Nexus</span></div>
             <div class="tagline">Academic Management Portal</div>
         </div>
 
-        <!-- LOGIN CARD -->
         <div class="login-card">
             <div class="card-title">Welcome back</div>
             <div class="card-subtitle">Sign in to access your academic dashboard</div>
@@ -486,13 +496,20 @@
             <button class="btn-primary" onclick="login()">Sign In →</button>
 
             <div class="register-prompt">
-                New student?&nbsp;<a onclick="toggleRegister(true)">Create an account</a>
+                New student?&nbsp;<a onclick="showRegister()">Create an account</a>
             </div>
         </div>
+    </div>
 
-        <!-- REGISTER CARD -->
-        <div class="register-card" id="registerCard">
-            <button class="close-register" onclick="toggleRegister(false)" title="Close">✕</button>
+    <!-- ─── REGISTER SECTION (Separate full page) ─── -->
+    <div id="registerSection">
+        <div class="logo-bar">
+            <div class="logo-text">Student<span>Nexus</span></div>
+            <div class="tagline">Create Your Account</div>
+        </div>
+
+        <div class="register-card">
+            <div class="back-link" onclick="showLogin()">← Back to Sign In</div>
             <div class="card-title">Create Account</div>
             <div class="card-subtitle" style="margin-bottom: 24px;">Fill in your details to register</div>
 
@@ -534,9 +551,7 @@
                 </div>
             </div>
         </div>
-
     </div>
-    <!-- ─── END AUTH SECTION ─── -->
 
     <!-- ─── DASHBOARD SECTION ─── -->
     <div id="dashboardSection">
@@ -601,7 +616,6 @@
         </div>
 
     </div>
-    <!-- ─── END DASHBOARD SECTION ─── -->
 
 </div>
 
@@ -611,14 +625,22 @@
     let currentUser = null;
     let authToken   = null;
 
-    /* ─── TOGGLE REGISTER PANEL ─── */
-    function toggleRegister(show) {
-        const card = document.getElementById('registerCard');
-        card.style.display = show ? 'block' : 'none';
-        if (show) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    /* ─── NAVIGATION ─── */
+    function showLogin() {
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('registerSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'none';
+        window.scrollTo(0, 0);
     }
 
-    /* ─── REGISTER ─── */
+    function showRegister() {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('registerSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+        window.scrollTo(0, 0);
+    }
+
+    /* ─── REGISTER: auto-login after account creation ─── */
     async function create() {
         const usn      = document.getElementById('reg_usn').value.toUpperCase().trim();
         const name     = document.getElementById('reg_name').value.trim();
@@ -652,15 +674,41 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (res.ok) {
-                alert('Account created! You can now sign in.');
-                toggleRegister(false);
-                document.getElementById('loginUsn').value = usn;
-                document.getElementById('loginPass').focus();
-            } else {
+
+            if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 alert('Registration failed: ' + (err.error || err.message || JSON.stringify(err)));
+                return;
             }
+
+            // FIX: Auto-login after registration — no need to sign in again
+            const loginRes = await fetch(`${API_BASE}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usn, password })
+            });
+
+            if (!loginRes.ok) {
+                // Login failed but account was created — go back to login page prefilled
+                showLogin();
+                document.getElementById('loginUsn').value = usn;
+                document.getElementById('loginPass').focus();
+                return;
+            }
+
+            const data = await loginRes.json();
+            authToken = data.token;
+
+            const profileRes = await fetch(`${API_BASE}/dashboard/${data.usn}`, {
+                headers: { 'Authorization': 'Bearer ' + authToken }
+            });
+
+            currentUser = profileRes.ok ? await profileRes.json() : { usn: data.usn, name };
+
+            sessionStorage.setItem('sn_user',  JSON.stringify(currentUser));
+            sessionStorage.setItem('sn_token', authToken || '');
+            showDashboard();
+
         } catch {
             alert('Connection error — is the server running?');
         }
@@ -689,11 +737,7 @@
                 headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
             });
 
-            if (profileRes.ok) {
-                currentUser = await profileRes.json();
-            } else {
-                currentUser = { usn: data.usn, name: data.name };
-            }
+            currentUser = profileRes.ok ? await profileRes.json() : { usn: data.usn, name: data.name };
 
             sessionStorage.setItem('sn_user',  JSON.stringify(currentUser));
             sessionStorage.setItem('sn_token', authToken || '');
@@ -709,8 +753,7 @@
         authToken   = null;
         sessionStorage.removeItem('sn_user');
         sessionStorage.removeItem('sn_token');
-        document.getElementById('authSection').style.display = 'block';
-        document.getElementById('dashboardSection').style.display = 'none';
+        showLogin();
         document.getElementById('loginPass').value = '';
     }
 
@@ -718,14 +761,22 @@
     function showDashboard() {
         if (!currentUser) return;
 
-        document.getElementById('authSection').style.display     = 'none';
+        document.getElementById('authSection').style.display      = 'none';
+        document.getElementById('registerSection').style.display  = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
+        window.scrollTo(0, 0);
 
         const u = currentUser;
 
-        const photoSrc = u.photoUrl
-            ? (u.photoUrl.startsWith('http') ? u.photoUrl : window.location.origin + u.photoUrl)
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'S')}&background=1a2035&color=4f8ef7&bold=true`;
+        // FIX: properly handle Cloudinary URLs (they start with https://) and relative URLs
+        let photoSrc;
+        if (u.photoUrl && u.photoUrl.trim() && u.photoUrl !== 'null') {
+            photoSrc = u.photoUrl.startsWith('http')
+                ? u.photoUrl
+                : window.location.origin + u.photoUrl;
+        } else {
+            photoSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'S')}&background=1a2035&color=4f8ef7&bold=true`;
+        }
         document.getElementById('dashPhoto').src = photoSrc;
 
         document.getElementById('dashName').innerText     = u.name     || '—';
@@ -755,6 +806,9 @@
     function toggleAttendanceView() {
         const card = document.getElementById('attendanceDisplayCard');
         card.style.display = card.style.display !== 'none' ? 'none' : 'block';
+        if (card.style.display === 'block') {
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }
 
     /* ─── UPLOAD PHOTO ─── */
@@ -775,14 +829,19 @@
             const res = await fetch(`${API_BASE}/${currentUser.usn}/upload`, { method: 'POST', headers, body: form });
             if (!res.ok) throw new Error();
 
-            const profileRes = await fetch(`${API_BASE}/dashboard/${currentUser.usn}`, { headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {} });
+            // FIX: refresh profile from server to get latest photoUrl
+            const profileRes = await fetch(`${API_BASE}/dashboard/${currentUser.usn}`, {
+                headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
+            });
             if (profileRes.ok) {
                 currentUser = await profileRes.json();
                 sessionStorage.setItem('sn_user', JSON.stringify(currentUser));
+
+                // FIX: Cloudinary returns full https:// URL — handle both cases
                 const newSrc = currentUser.photoUrl.startsWith('http')
                     ? currentUser.photoUrl
                     : window.location.origin + currentUser.photoUrl;
-                document.getElementById('dashPhoto').src = newSrc;
+                document.getElementById('dashPhoto').src = newSrc + '?t=' + Date.now(); // cache bust
             }
             alert('Photo updated!');
         } catch {
@@ -824,11 +883,14 @@
                 </tr>`;
             }).join('');
 
+            // FIX: wrap table in scrollable div for mobile
             document.getElementById('attendanceContent').innerHTML = `
-                <table>
-                    <thead><tr><th>Subject</th><th>Attended / Total</th><th>Percentage</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>`;
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>Subject</th><th>Attended / Total</th><th>Percentage</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
         } catch {
             document.getElementById('attendanceContent').innerHTML =
                 `<div class="empty-state">Could not load attendance data.</div>`;
