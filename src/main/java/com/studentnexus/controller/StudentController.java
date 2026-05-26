@@ -155,7 +155,7 @@ public class StudentController {
                     .body(Map.of("error", "Upload failed: " + e.getMessage()));
         }
     }
-    @PutMapping("/{usn}")
+    @PatchMapping("/{usn}")
     public ResponseEntity<?> updateStudent(
             @PathVariable String usn,
             @RequestBody StudentInfo updatedStudent) {
