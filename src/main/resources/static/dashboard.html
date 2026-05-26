@@ -441,16 +441,101 @@
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
     /* ── Mobile ── */
-    @media (max-width: 700px) {
-      .main { padding: 16px; }
-      .sidebar { display: none; }
-      .search-input { width: 100%; }
-      .search-row { flex-direction: column; align-items: stretch; }
-      .search-row .btn { width: 100%; }
-      .bulk-bar { flex-direction: column; align-items: stretch; }
-      .bulk-bar > div { display: flex; gap: 8px; }
-      .bulk-bar > div .btn { flex: 1; }
-      .modal-grid { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+
+      body {
+        overflow-x: hidden;
+      }
+
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        display: flex !important;
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 10px;
+      }
+
+      .sidebar-section {
+        width: 100%;
+      }
+
+      .sidebar-label {
+        display: none;
+      }
+
+      .sidebar-section {
+        display: flex;
+        gap: 10px;
+      }
+
+      .nav-item {
+        white-space: nowrap;
+        min-width: fit-content;
+        flex-shrink: 0;
+      }
+
+      .main {
+        padding: 16px;
+      }
+
+      .search-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      .search-row .btn {
+        width: 100%;
+      }
+
+      .student-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 800px;
+      }
+
+      .bulk-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .bulk-bar > div {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+      }
+
+      .bulk-bar .btn {
+        flex: 1;
+      }
+
+      .modal {
+        width: 95vw;
+        padding: 20px;
+      }
+
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
