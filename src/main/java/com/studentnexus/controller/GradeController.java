@@ -47,6 +47,7 @@ public class GradeController {
         List<Grade> grades = gradeRepo.findByUsnOrderBySemesterAsc(usn);
 
         if (grades.isEmpty()) {
+
             return ResponseEntity.ok(
                     Map.of(
                             "cgpa", 0.0,
@@ -124,22 +125,6 @@ public class GradeController {
             );
         }
 
-        if (grade.getInternalMarks() == null) {
-            grade.setInternalMarks(0.0);
-        }
-
-        if (grade.getExternalMarks() == null) {
-            grade.setExternalMarks(0.0);
-        }
-
-        if (grade.getMaxInternal() == null) {
-            grade.setMaxInternal(50.0);
-        }
-
-        if (grade.getMaxExternal() == null) {
-            grade.setMaxExternal(100.0);
-        }
-
         Grade saved = gradeRepo.save(grade);
 
         return ResponseEntity.ok(saved);
@@ -173,14 +158,14 @@ public class GradeController {
         if (payload.containsKey("internalMarks")) {
 
             grade.setInternalMarks(
-                    ((Number) payload.get("internalMarks")).doubleValue()
+                    ((Number) payload.get("internalMarks")).intValue()
             );
         }
 
         if (payload.containsKey("externalMarks")) {
 
             grade.setExternalMarks(
-                    ((Number) payload.get("externalMarks")).doubleValue()
+                    ((Number) payload.get("externalMarks")).intValue()
             );
         }
 
